@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <script>
+      const path = window.location.pathname
+      const query = window.location.search
+      const hash = window.location.hash
+      window.location.replace(`/?route=${encodeURIComponent(path)}${query}${hash}`)
+    </script>
+  </head>
+  <body></body>
+</html>

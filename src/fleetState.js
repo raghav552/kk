@@ -28,7 +28,7 @@ const toRecord = (id, value = {}) => {
 
 const asFirebaseFleet = snapshot => {
   const value = snapshot.val() || {}
-  return Object.keys(value).filter(id => authorizedVehicleIds.has(id)).sort().map(id => toRecord(id, value[id]))
+  return initialFleet.map(driver => toRecord(driver.id, value[driver.id]))
 }
 
 const initialFleet = createInitialFleet()
@@ -37,12 +37,20 @@ const authorizedVehicleIds = new Set(initialFleet.map(driver => driver.id))
 export const useFleetState = () => {
   const [drivers, setDrivers] = useState(initialFleet)
   const [firebaseError, setFirebaseError] = useState('')
+  const [firebaseConnected, setFirebaseConnected] = useState(false)
 
   useEffect(() => {
     if (!fleetRef) return undefined
     return onValue(fleetRef, snapshot => {
       setDrivers(asFirebaseFleet(snapshot))
       setFirebaseError('')
+    }, error => setFirebaseError(error.message))
+  }, [])
+
+  useEffect(() => {
+    if (!database) return undefined
+    return onValue(ref(database, '.info/connected'), snapshot => {
+      setFirebaseConnected(snapshot.val() === true)
     }, error => setFirebaseError(error.message))
   }, [])
 
@@ -131,5 +139,5 @@ export const useFleetState = () => {
     attention: drivers.filter(driver => driver.status === 'attention' || driver.status === 'outside' || (driver.status === 'active' && driver.lastSeenAt && Date.now() - driver.lastSeenAt > 120000)).length,
   }), [drivers])
 
-  return { drivers, stats, startDuty, updateLocation, endDuty, setOutside, reset, firebaseConfigured, firebaseError }
+  return { drivers, stats, startDuty, updateLocation, endDuty, setOutside, reset, firebaseConfigured, firebaseConnected, firebaseError }
 }
